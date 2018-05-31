@@ -9,8 +9,9 @@ const weatherMap = {
 
 Page({
   data: {
-    nowTemp: '14°',
-    nowWeather: '阴天'
+    nowTemp: '',
+    nowWeather: '',
+    nowWeatherBackground: ''
   },
   onLoad() {
     wx.request({
@@ -25,7 +26,8 @@ Page({
         console.log(temp, weather)
         this.setData({
           nowTemp: temp + '°',
-          nowWeather: weatherMap[weather]
+          nowWeather: weatherMap[weather],
+          nowWeatherBackground: '/images/' + weather + '-bg.png'
         })
       }
     })
