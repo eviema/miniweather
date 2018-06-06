@@ -136,19 +136,14 @@ Page({
         })
         this.qqmapsdk.reverseGeocoder({
           location: {
-            // real location is overseas and
-            // cannot be used to fetch city name
-            // latitude: res.latitude,
-            // longitude: res.longitude
-            
-            // use Beijing instead for testing
-            latitude: 39.984060,
-            longitude: 116.307520
+            latitude: res.latitude,
+            longitude: res.longitude
           },
           success: res => {
             let city = res.result.address_component.city
             this.setData({
-              city: city
+              // 如果无法获取对应城市名，默认设置为北京市
+              city: city === undefined? '北京市': city
             })
             this.getNow()
           }
