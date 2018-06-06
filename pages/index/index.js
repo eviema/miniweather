@@ -21,7 +21,9 @@ Page({
     nowTemp: '',
     nowWeather: '',
     nowWeatherBackground: '',
-    hourlyWeather: []
+    hourlyWeather: [],
+    todayTemp: '',
+    todayDate: '',
   },
   onPullDownRefresh() {
     this.getNow(()=> {
@@ -41,6 +43,7 @@ Page({
         let result = res.data.result
         this.setNow(result)
         this.setHourlyWeather(result)
+        this.setToday(result)
       },
       complete: () => {
         callback && callback()
@@ -75,5 +78,15 @@ Page({
     this.setData({
       hourlyWeather: hourlyWeather
     })
+  },
+  setToday(result){
+    let date = new Date()
+    this.setData({
+      todayTemp: `${result.today.minTemp}° - ${result.today.maxTemp}°`,
+      todayDate: `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()} 今天`
+    })
+  },
+  onTapDayWeather(){
+    wx.showToast()
   }
 })
