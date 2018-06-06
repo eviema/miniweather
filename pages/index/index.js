@@ -15,6 +15,11 @@ const weatherColorMap = {
   'heavyrain': '#c5ccd0',
   'snow': '#aae1fc'
 }
+const QQMapWX = require('../../libs/qqmap-wx-jssdk.js')
+
+const UNPROMPTED = 0
+const UNAUTHORIZED = 1
+const AUTHORIZED = 2
 
 Page({
   data: {
@@ -24,20 +29,37 @@ Page({
     hourlyWeather: [],
     todayTemp: '',
     todayDate: '',
-  },
-  onPullDownRefresh() {
-    this.getNow(()=> {
-      wx.stopPullDownRefresh()
-    })
+    city: '广州市',
+    locationAuthType: UNPROMPTED,
   },
   onLoad() {
-    this.getNow()
+    this.qqmapsdk = new QQMapWX({
+      key: 'MD6BZ-GXT64-6W4UU-D67JP-QOYIK-MOBEH'
+    })
+    wx.getSetting({
+      success: res => {
+        let auth = res.authSetting['scope.userLocation']
+        this.setData({
+          locationAuthType: auth ? AUTHORIZED: 
+          (auth===false)?UNAUTHORIZED:UNPROMPTED
+        })
+        if (auth)
+          this.getCityAndWeather()
+        else
+          this.getNow()
+      }
+    })
+  },
+  onPullDownRefresh() {
+    this.getNow(() => {
+      wx.stopPullDownRefresh()
+    })
   },
   getNow(callback) {
     wx.request({
       url: 'https://test-miniprogram.com/api/weather/now',
       data: {
-        city: '广州市'
+        city: this.data.city
       },
       success: res => {
         let result = res.data.result
@@ -87,9 +109,56 @@ Page({
     })
   },
   onTapDayWeather(){
-    wx.showToast()
     wx.navigateTo({
-      url: '/pages/list/list',
+      url: '/pages/list/list?city=' + this.data.city,
+    })
+  },
+  onTapLocation(){
+    if (this.data.locationAuthType === UNAUTHORIZED) {
+      wx.openSetting({
+        success: res => {
+          let auth = res.authSetting['scope.userLocation']
+          if (auth) {
+            this.getCityAndWeather()
+          }
+        }
+      })
+    }
+    else {
+      this.getCityAndWeather()
+    }
+  },
+  getCityAndWeather() {  
+    wx.getLocation({
+      success: res => {
+        this.setData({
+          locationAuthType: AUTHORIZED,
+        })
+        this.qqmapsdk.reverseGeocoder({
+          location: {
+            // real location is overseas and
+            // cannot be used to fetch city name
+            // latitude: res.latitude,
+            // longitude: res.longitude
+            
+            // use Beijing instead for testing
+            latitude: 39.984060,
+            longitude: 116.307520
+          },
+          success: res => {
+            let city = res.result.address_component.city
+            this.setData({
+              city: city
+            })
+            this.getNow()
+          }
+        })
+      },
+      fail: ()=>{
+        this.setData({
+          locationAuthType: UNAUTHORIZED
+        })
+      }
     })
   }
 })
